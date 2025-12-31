@@ -1,12 +1,15 @@
 """Game state management for tracking enemies, ship, and bullets."""
 
 from abc import ABC, abstractmethod
-from typing import List, Tuple
+from typing import TYPE_CHECKING, List
 
 from PIL import ImageDraw
 
 from ..constants import NUM_DAYS, NUM_WEEKS
 from ..github_client import ContributionData
+
+if TYPE_CHECKING:
+    from .render_context import RenderContext
 
 class Drawable(ABC):
     """Interface for objects that can be animated and drawn."""
@@ -17,7 +20,7 @@ class Drawable(ABC):
         pass
 
     @abstractmethod
-    def draw(self, draw: ImageDraw.ImageDraw, context: dict) -> None:
+    def draw(self, draw: ImageDraw.ImageDraw, context: "RenderContext") -> None:
         """
         Draw the object on the image.
 
@@ -63,22 +66,19 @@ class Enemy(Drawable):
         """Update enemy state for next frame (enemies don't animate currently)."""
         pass
 
-    def draw(self, draw: ImageDraw.ImageDraw, context: dict) -> None:
+    def draw(self, draw: ImageDraw.ImageDraw, context: "RenderContext") -> None:
         """Draw the enemy at its position."""
         if not self.is_alive():
             return
 
         # Get position from context helper
-        get_cell_position = context["get_cell_position"]
-        x, y = get_cell_position(self.week, self.day)
+        x, y = context.get_cell_position(self.week, self.day)
 
         # Get color based on current health
-        color_map = context["enemy_colors"]
-        cell_size = context["cell_size"]
-        color = color_map.get(self.health, color_map[1])
+        color = context.enemy_colors.get(self.health, context.enemy_colors[1])
 
         draw.rectangle(
-            [x, y, x + cell_size, y + cell_size],
+            [x, y, x + context.cell_size, y + context.cell_size],
             fill=color,
         )
 
@@ -103,25 +103,19 @@ class Bullet(Drawable):
         """Update bullet position for next frame (controlled externally)."""
         pass
 
-    def draw(self, draw: ImageDraw.ImageDraw, context: dict) -> None:
+    def draw(self, draw: ImageDraw.ImageDraw, context: "RenderContext") -> None:
         """Draw the bullet at its animated position."""
-        get_cell_position = context["get_cell_position"]
-        cell_size = context["cell_size"]
-        cell_spacing = context["cell_spacing"]
-        padding = context["padding"]
-        bullet_color = context["bullet_color"]
-
         # Get horizontal position (week)
-        x, _ = get_cell_position(self.week, 0)
-        x += cell_size // 2  # Center of cell
+        x, _ = context.get_cell_position(self.week, 0)
+        x += context.cell_size // 2  # Center of cell
 
         # Calculate vertical position based on progress
         # Start from ship position (below grid)
-        ship_y = padding + NUM_DAYS * (cell_size + cell_spacing) + 10
+        ship_y = context.padding + NUM_DAYS * (context.cell_size + context.cell_spacing) + 10
 
         # End at target enemy position
-        _, target_y = get_cell_position(self.week, self.target_day)
-        target_y += cell_size // 2  # Center of cell
+        _, target_y = context.get_cell_position(self.week, self.target_day)
+        target_y += context.cell_size // 2  # Center of cell
 
         # Interpolate based on progress
         y = ship_y + (target_y - ship_y) * self.progress
@@ -130,7 +124,7 @@ class Bullet(Drawable):
         radius = 3
         draw.ellipse(
             [x - radius, y - radius, x + radius, y + radius],
-            fill=bullet_color,
+            fill=context.bullet_color,
         )
 
 
@@ -155,32 +149,26 @@ class Ship(Drawable):
         """Update ship state for next frame (controlled externally)."""
         pass
 
-    def draw(self, draw: ImageDraw.ImageDraw, context: dict) -> None:
+    def draw(self, draw: ImageDraw.ImageDraw, context: "RenderContext") -> None:
         """Draw the ship below the grid."""
-        get_cell_position = context["get_cell_position"]
-        cell_size = context["cell_size"]
-        cell_spacing = context["cell_spacing"]
-        padding = context["padding"]
-        ship_color = context["ship_color"]
-
         # Ship stays below the grid at a fixed vertical position
         if self.week >= 0:
-            x, _ = get_cell_position(self.week, 0)
+            x, _ = context.get_cell_position(self.week, 0)
         else:
             # Ship off-screen to the left
-            x = padding - 20
+            x = context.padding - 20
 
         # Position ship below the grid
-        ship_y = padding + NUM_DAYS * (cell_size + cell_spacing) + 10
+        ship_y = context.padding + NUM_DAYS * (context.cell_size + context.cell_spacing) + 10
 
         # Draw simple ship shape (triangle pointing up)
         draw.polygon(
             [
-                (x + cell_size // 2, ship_y),  # Top point (front)
-                (x, ship_y + cell_size),  # Bottom left
-                (x + cell_size, ship_y + cell_size),  # Bottom right
+                (x + context.cell_size // 2, ship_y),  # Top point (front)
+                (x, ship_y + context.cell_size),  # Bottom left
+                (x + context.cell_size, ship_y + context.cell_size),  # Bottom right
             ],
-            fill=ship_color,
+            fill=context.ship_color,
         )
 
 
@@ -276,7 +264,7 @@ class GameState(Drawable):
         for bullet in self.bullets:
             bullet.animate()
 
-    def draw(self, draw: ImageDraw.ImageDraw, context: dict) -> None:
+    def draw(self, draw: ImageDraw.ImageDraw, context: "RenderContext") -> None:
         """Draw all game objects including the grid."""
         # Draw grid background first
         self._draw_grid(draw, context)
@@ -292,16 +280,12 @@ class GameState(Drawable):
         # Draw ship (on top)
         self.ship.draw(draw, context)
 
-    def _draw_grid(self, draw: ImageDraw.ImageDraw, context: dict) -> None:
+    def _draw_grid(self, draw: ImageDraw.ImageDraw, context: "RenderContext") -> None:
         """Draw the empty grid cells."""
-        get_cell_position = context["get_cell_position"]
-        cell_size = context["cell_size"]
-        grid_color = context["grid_color"]
-
         for week in range(NUM_WEEKS):
             for day in range(NUM_DAYS):
-                x, y = get_cell_position(week, day)
+                x, y = context.get_cell_position(week, day)
                 draw.rectangle(
-                    [x, y, x + cell_size, y + cell_size],
-                    fill=grid_color,
+                    [x, y, x + context.cell_size, y + context.cell_size],
+                    fill=context.grid_color,
                 )

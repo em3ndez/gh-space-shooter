@@ -8,6 +8,7 @@ from ..github_client import ContributionData
 from .game_state import GameState
 from .renderer import Renderer
 from .strategies.base_strategy import BaseStrategy
+from .render_context import RenderContext
 
 
 class Animator:
@@ -40,7 +41,7 @@ class Animator:
         """
         # Initialize game state
         game_state = GameState(self.contribution_data)
-        renderer = Renderer(game_state)
+        renderer = Renderer(game_state, RenderContext.darkmode())
 
         frames = self._generate_frames(game_state, renderer)
 
