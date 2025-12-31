@@ -73,7 +73,7 @@ class Animator:
         """
         frames = []
 
-        # Add initial frame (ship off-screen)
+        # Add initial frame showing starting state
         frames.append(renderer.render_frame())
 
         # Process each action from the strategy

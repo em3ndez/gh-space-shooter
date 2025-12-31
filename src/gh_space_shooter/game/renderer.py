@@ -14,6 +14,7 @@ class Renderer:
 
         Args:
             game_state: The game state to render
+            render_context: Rendering configuration and theming
         """
         self.game_state = game_state
 

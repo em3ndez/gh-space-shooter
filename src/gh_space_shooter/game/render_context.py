@@ -24,20 +24,21 @@ class RenderContext:
     bullet_color: Tuple[int, int, int]
     enemy_colors: dict[int, Tuple[int, int, int]]  # Maps health level to color
 
-    def get_cell_position(self, week: int, day: int) -> tuple[int, int]:
+    def get_cell_position(self, x: float, y: float) -> tuple[float, float]:
         """
-        Get the pixel position (x, y) of a cell.
+        Get the pixel position (x, y) for a grid coordinate.
 
         Args:
-            week: Week index
-            day: Day index
+            week: Week position (0-51, can be fractional for smooth animation)
+            day: Day position (0-6, can be fractional for smooth animation)
 
         Returns:
             Tuple of (x, y) pixel coordinates
         """
-        x = self.padding + week * (self.cell_size + self.cell_spacing)
-        y = self.padding + day * (self.cell_size + self.cell_spacing)
-        return (x, y)
+        return (
+            self.padding + x * (self.cell_size + self.cell_spacing),
+            self.padding + y * (self.cell_size + self.cell_spacing),
+        )
 
     @staticmethod
     def darkmode() -> "RenderContext":

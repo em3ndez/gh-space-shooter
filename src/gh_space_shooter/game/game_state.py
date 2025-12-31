@@ -39,9 +39,10 @@ class Enemy(Drawable):
         Initialize an enemy.
 
         Args:
-            x: X position (0-51)
-            y: Y position (0-6)
+            x: Week position in contribution grid (0-51)
+            y: Day position in contribution grid (0-6, Sun-Sat)
             health: Initial health/lives (1-4)
+            game_state: Reference to game state for self-removal when destroyed
         """
         self.x = x
         self.y = y
@@ -50,10 +51,7 @@ class Enemy(Drawable):
 
     def take_damage(self) -> None:
         """
-        Enemy takes 1 damage.
-
-        Returns:
-            True if enemy is destroyed (health <= 0), False otherwise
+        Enemy takes 1 damage and removes itself from game if destroyed.
         """
         self.health -= 1
         if self.health <= 0:
@@ -79,14 +77,14 @@ class Bullet(Drawable):
 
     def __init__(self, x: int, game_state: "GameState"):
         """
-        Initialize a bullet.
+        Initialize a bullet at ship's firing position.
 
         Args:
-            x: X position (0-51)
-            game_state: The game state
+            x: Week position where bullet is fired (0-51)
+            game_state: Reference to game state for collision detection and self-removal
         """
         self.x = x
-        self.y = SHIP_POSITION_Y - 1
+        self.y: float = SHIP_POSITION_Y - 1
         self.game_state = game_state
 
 
@@ -98,7 +96,7 @@ class Bullet(Drawable):
         return None
 
     def animate(self) -> None:
-        """Update bullet position for next frame."""
+        """Update bullet position, check for collisions, and remove on hit."""
         self.y -= BULLET_SPEED
         hit_enemy = self._check_collision()
         if hit_enemy:
@@ -123,7 +121,7 @@ class Ship(Drawable):
 
     def __init__(self, game_state: "GameState"):
         """Initialize the ship at starting position."""
-        self.x = 25  # Start middle of screen
+        self.x: float = 25  # Start middle of screen
         self.target_x = self.x
         self.game_state = game_state
 
@@ -141,7 +139,7 @@ class Ship(Drawable):
         return self.x != self.target_x
 
     def animate(self) -> None:
-        """Update ship state for next frame (controlled externally)."""
+        """Update ship position, moving toward target at constant speed."""
         if self.x < self.target_x:
             self.x = min(self.x + SHIP_SPEED, self.target_x)
         elif self.x > self.target_x:
@@ -196,7 +194,7 @@ class GameState(Drawable):
         """
         Ship shoots a bullet at target position.
         """
-        bullet = Bullet(self.ship.x, game_state=self)
+        bullet = Bullet(int(self.ship.x), game_state=self)
         self.bullets.append(bullet)
 
     def is_complete(self) -> bool:
