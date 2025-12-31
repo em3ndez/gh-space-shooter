@@ -9,7 +9,7 @@ from dotenv import load_dotenv
 from rich.console import Console
 
 from .console_printer import ContributionConsolePrinter
-from .game import Animator, ColumnStrategy
+from .game import Animator, ColumnStrategy, RandomStrategy, RowStrategy
 from .github_client import ContributionData, GitHubAPIError, GitHubClient
 
 # Load environment variables from .env file
@@ -51,7 +51,7 @@ def main(
         "column",
         "--strategy",
         "-s",
-        help="Strategy for clearing enemies (column, row, lives)",
+        help="Strategy for clearing enemies (column, row, random)",
     ),
 ) -> None:
     """
@@ -150,8 +150,14 @@ def _generate_gif(data: ContributionData, file_path: str, strategy_name: str) ->
     # Select strategy
     if strategy_name == "column":
         strategy = ColumnStrategy()
+    elif strategy_name == "row":
+        strategy = RowStrategy()
+    elif strategy_name == "random":
+        strategy = RandomStrategy()
     else:
-        raise CLIError(f"Unknown strategy '{strategy_name}'. Available: column")
+        raise CLIError(
+            f"Unknown strategy '{strategy_name}'. Available: column, row, random"
+        )
 
     # Create animator and generate GIF
     try:

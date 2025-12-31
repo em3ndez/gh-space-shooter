@@ -102,6 +102,8 @@ class Bullet(Drawable):
         if hit_enemy:
             hit_enemy.take_damage()
             self.game_state.bullets.remove(self)
+        if self.y < -10: # magic number to remove off-screen bullets
+            self.game_state.bullets.remove(self)
 
     def draw(self, draw: ImageDraw.ImageDraw, context: "RenderContext") -> None:
         """Draw the bullet at its animated position."""

@@ -1,6 +1,6 @@
 """Animator for generating GIF animations from game strategies."""
 
-from typing import List
+from typing import Iterator
 
 from PIL import Image
 
@@ -49,10 +49,10 @@ class Animator:
 
         # Save as GIF
         if frames:
-            frames[0].save(
+            next(frames).save(
                 output_path,
                 save_all=True,
-                append_images=frames[1:],
+                append_images=list(frames),
                 duration=self.frame_duration,
                 loop=0,  # Loop forever
                 optimize=False,
@@ -60,7 +60,7 @@ class Animator:
 
     def _generate_frames(
         self, game_state: GameState, renderer: Renderer
-    ) -> List[Image.Image]:
+    ) -> Iterator[Image.Image]:
         """
         Generate all animation frames.
 
@@ -71,28 +71,31 @@ class Animator:
         Returns:
             List of PIL Images representing animation frames
         """
-        frames = []
 
         # Add initial frame showing starting state
-        frames.append(renderer.render_frame())
+        yield renderer.render_frame()
 
         # Process each action from the strategy
         for action in self.strategy.generate_actions(game_state):
             game_state.ship.move_to(action.x)
             while game_state.can_take_action() is False:
                 game_state.animate()
-                frames.append(renderer.render_frame())
+                yield renderer.render_frame()
 
             if action.shoot:
                 game_state.shoot()
                 game_state.animate()
-                frames.append(renderer.render_frame())
+                yield renderer.render_frame()
 
+        force_kill_countdown = 100
         # Add final frames showing completion
         while not game_state.is_complete():
             game_state.animate()
-            frames.append(renderer.render_frame())
+            yield renderer.render_frame()
+            
+            force_kill_countdown -= 1
+            if force_kill_countdown <= 0:
+                break
+            
         for _ in range(5):
-            frames.append(renderer.render_frame())
-
-        return frames
+            yield renderer.render_frame()

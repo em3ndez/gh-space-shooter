@@ -15,8 +15,7 @@ class Action:
         Initialize an action.
 
         Args:
-            x: x index (0-51)
-            day: Day index (0-6, where 0=Sunday)
+            x: Week position (0-51) where ship should move
             shoot: Whether to shoot at this position
         """
         self.x = x
