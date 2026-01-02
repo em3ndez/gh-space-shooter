@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING
 
 from PIL import ImageDraw
 
-from ...constants import SHIP_POSITION_Y, SHIP_SHOOT_COOLDOWN_FRAMES, SHIP_SPEED
+from ...constants import SHIP_POSITION_Y, SHIP_SPEED
 from .drawable import Drawable
 
 if TYPE_CHECKING:
