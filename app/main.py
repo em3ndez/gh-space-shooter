@@ -8,6 +8,7 @@ from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.requests import Request
 from fastapi.responses import HTMLResponse, Response
+from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
 from gh_space_shooter.game import Animator, ColumnStrategy, RandomStrategy, RowStrategy, BaseStrategy
@@ -18,6 +19,8 @@ load_dotenv()
 app = FastAPI(title="GitHub Space Shooter")
 
 templates = Jinja2Templates(directory=Path(__file__).parent / "templates")
+app.mount("/static", StaticFiles(directory=Path(__file__).parent / "static"), name="static")
+
 
 STRATEGY_MAP: dict[str, type[BaseStrategy]] = {
     "column": ColumnStrategy,
