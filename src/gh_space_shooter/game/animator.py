@@ -6,6 +6,7 @@ from typing import Iterator
 from PIL import Image
 
 from ..github_client import ContributionData
+from ..output import GifOutputProvider, OutputProvider
 from .game_state import GameState
 from .renderer import Renderer
 from .strategies.base_strategy import BaseStrategy
@@ -40,36 +41,52 @@ class Animator:
         # Used to scale all speeds (cells/second) to per-frame movement
         self.delta_time = 1.0 / fps
 
-    def generate_gif(self, maxFrame: int | None) -> BytesIO:
+    def generate_frames(self) -> Iterator[Image.Image]:
         """
-        Generate animated GIF and save to file.
+        Generate all animation frames.
 
-        Args:
-            output_path: Path where GIF should be saved
+        Returns:
+            Iterator of PIL Images representing animation frames
         """
-        # Initialize game state
         game_state = GameState(self.contribution_data)
         renderer = Renderer(game_state, RenderContext.darkmode(), watermark=self.watermark)
+        yield from self._generate_frames(game_state, renderer)
 
-        frames: list[Image.Image] = []
-        for frame in self._generate_frames(game_state, renderer):
-            frames.append(frame)
-            if maxFrame is not None and len(frames) >= maxFrame:
-                break
+    def generate(self, provider: OutputProvider) -> BytesIO:
+        """
+        Generate animation using the specified output provider.
 
-        gif_buffer = BytesIO()
-        if frames:
-            frames[0].save(
-                gif_buffer,
-                format="gif",
-                save_all=True,
-                append_images=frames[1:],
-                duration=self.frame_duration,
-                loop=0,  # Loop forever
-                optimize=False,
-            )
-        
-        return gif_buffer
+        Args:
+            provider: OutputProvider instance for encoding
+
+        Returns:
+            BytesIO buffer with encoded animation
+        """
+        buffer = BytesIO()
+        encoded = provider.encode(self.generate_frames())
+        buffer.write(encoded)
+        buffer.seek(0)
+        return buffer
+
+    def generate_gif(self, maxFrame: int | None) -> BytesIO:
+        """
+        Generate animated GIF (legacy method).
+
+        Args:
+            maxFrame: Maximum number of frames to generate
+        """
+        provider = GifOutputProvider(fps=self.fps, watermark=self.watermark)
+
+        if maxFrame:
+            frames = list(self.generate_frames())[:maxFrame]
+            encoded = provider.encode(iter(frames))
+        else:
+            encoded = provider.encode(self.generate_frames())
+
+        buffer = BytesIO()
+        buffer.write(encoded)
+        buffer.seek(0)
+        return buffer
 
     def _generate_frames(
         self, game_state: GameState, renderer: Renderer
