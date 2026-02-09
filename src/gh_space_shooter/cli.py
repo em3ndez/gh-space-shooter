@@ -3,6 +3,7 @@
 import json
 import os
 import sys
+from pathlib import Path
 
 import typer
 from dotenv import load_dotenv
@@ -171,7 +172,6 @@ def _generate_output(
     max_frames: int | None,
 ) -> None:
     """Generate animation in the format specified by file_path extension."""
-    from pathlib import Path
 
     # Warn about GIF FPS limitation
     if file_path.endswith(".gif") and fps > 50:

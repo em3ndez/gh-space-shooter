@@ -16,7 +16,6 @@ class ContributionConsolePrinter:
     """
 
     def display_stats(self, data: ContributionData) -> None:
-    def display_stats(self, data: ContributionData) -> None:
         """Display contribution statistics in a one-liner."""
         # Get date range
         all_days = [day for week in data["weeks"] for day in week["days"]]
