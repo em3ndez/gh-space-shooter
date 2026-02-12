@@ -9,6 +9,15 @@ from .base import OutputProvider
 class WebPOutputProvider(OutputProvider):
     """Output provider for WebP format."""
 
+    def __init__(self, path: str):
+        """
+        Initialize the provider with an output file path.
+
+        Args:
+            path: Path to the output WebP file
+        """
+        super().__init__(path)
+
     def encode(self, frames: Iterator[Image.Image], frame_duration: int) -> bytes:
         """
         Encode frames as animated WebP.
@@ -37,13 +46,12 @@ class WebPOutputProvider(OutputProvider):
 
         return buffer.getvalue()
 
-    def write(self, path: str, data: bytes) -> None:
+    def write(self, data: bytes) -> None:
         """
         Write WebP-encoded data to a file.
 
         Args:
-            path: Path to the output file
             data: WebP-encoded bytes to write
         """
-        with open(path, "wb") as f:
+        with open(self.path, "wb") as f:
             f.write(data)

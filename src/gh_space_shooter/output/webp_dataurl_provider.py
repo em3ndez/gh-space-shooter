@@ -22,7 +22,7 @@ class WebpDataUrlOutputProvider(OutputProvider):
         Args:
             output_path: Path to the text file where the data URL will be written
         """
-        self.output_path = output_path
+        super().__init__(output_path)
 
     def encode(self, frames: Iterator[Image.Image], frame_duration: int) -> bytes:
         """
@@ -62,26 +62,25 @@ class WebpDataUrlOutputProvider(OutputProvider):
         # Return data URL as bytes
         return data_url.encode("utf-8")
 
-    def write(self, path: str, data: bytes) -> None:
+    def write(self, data: bytes) -> None:
         """
         Write data URL to file with injection or append mode.
 
         This handles text mode properly with newlines.
 
         Args:
-            path: Path to the output file
             data: Data URL as bytes (will be decoded as UTF-8 text)
         """
         data_url = data.decode("utf-8")
 
         # Try to create new file exclusively (avoids TOCTOU race condition)
         try:
-            with open(path, "x") as f:
+            with open(self.path, "x") as f:
                 f.write(data_url + "\n")
             return
         except FileExistsError:
             # File exists - read contents
-            with open(path, "r") as f:
+            with open(self.path, "r") as f:
                 content = f.read()
 
         # Check for marker
@@ -100,5 +99,5 @@ class WebpDataUrlOutputProvider(OutputProvider):
             content += data_url + "\n"
 
         # Write back
-        with open(path, "w") as f:
+        with open(self.path, "w") as f:
             f.write(content)

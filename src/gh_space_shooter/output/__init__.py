@@ -38,7 +38,7 @@ def resolve_output_provider(
         )
 
     provider_class = _PROVIDER_MAP[ext]
-    return provider_class()
+    return provider_class(file_path)
 
 
 __all__ = [

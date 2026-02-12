@@ -249,7 +249,7 @@ def _generate_output(
     # Encode and write
     try:
         encoded = provider.encode(animator.generate_frames(max_frames), 1000 // fps)
-        provider.write(file_path, encoded)
+        provider.write(encoded)
 
         # Console output
         if write_dataurl:

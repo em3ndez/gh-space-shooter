@@ -21,7 +21,7 @@ def test_provider_creates_new_file():
         frames = [create_test_frame("red"), create_test_frame("blue")]
 
         data = provider.encode(iter(frames), frame_duration=100)
-        provider.write(output_path, data)
+        provider.write(data)
 
         # File should exist and contain data URL
         assert os.path.exists(output_path)
@@ -46,7 +46,7 @@ def test_injection_mode_replaces_marker_line():
         provider = WebpDataUrlOutputProvider(output_path)
         frames = [create_test_frame("red")]
         data = provider.encode(iter(frames), frame_duration=100)
-        provider.write(output_path, data)
+        provider.write(data)
 
         # Verify injection worked
         with open(output_path, "r") as f:
@@ -71,7 +71,7 @@ def test_append_mode_when_no_marker():
         provider = WebpDataUrlOutputProvider(output_path)
         frames = [create_test_frame("red")]
         data = provider.encode(iter(frames), frame_duration=100)
-        provider.write(output_path, data)
+        provider.write(data)
 
         # Verify append worked
         with open(output_path, "r") as f:
@@ -90,7 +90,7 @@ def test_empty_frames_writes_empty_string():
 
         provider = WebpDataUrlOutputProvider(output_path)
         data = provider.encode(iter([]), frame_duration=100)
-        provider.write(output_path, data)
+        provider.write(data)
 
         # File should exist with empty content
         assert os.path.exists(output_path)
@@ -116,7 +116,7 @@ def test_multiple_markers_only_first_replaced():
         provider = WebpDataUrlOutputProvider(output_path)
         frames = [create_test_frame("red")]
         data = provider.encode(iter(frames), frame_duration=100)
-        provider.write(output_path, data)
+        provider.write(data)
 
         # Verify only first marker replaced
         with open(output_path, "r") as f:
