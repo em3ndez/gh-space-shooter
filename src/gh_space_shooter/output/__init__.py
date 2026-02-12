@@ -4,6 +4,7 @@ from pathlib import Path
 from .base import OutputProvider
 from .gif_provider import GifOutputProvider
 from .webp_provider import WebPOutputProvider
+from .webp_dataurl_provider import WebpDataUrlOutputProvider
 
 
 # Extension -> Provider class mapping
@@ -21,8 +22,6 @@ def resolve_output_provider(
 
     Args:
         file_path: Output file path (extension determines format)
-        fps: Frames per second
-        watermark: Whether to add watermark
 
     Returns:
         An OutputProvider instance
@@ -42,4 +41,10 @@ def resolve_output_provider(
     return provider_class()
 
 
-__all__ = ["OutputProvider", "GifOutputProvider", "WebPOutputProvider", "resolve_output_provider"]
+__all__ = [
+    "OutputProvider",
+    "GifOutputProvider",
+    "WebPOutputProvider",
+    "WebpDataUrlOutputProvider",
+    "resolve_output_provider",
+]
