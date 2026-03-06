@@ -37,7 +37,7 @@ inputs:
 
 outputs:
   output-file:
-    description: 'Path to the generated output file (GIF, WebP, or HTML data URL file)'
+    description: 'Path to the generated output file (GIF or WebP)'
     value: ${{ steps.generate.outputs.output-file }}
 
 runs:
