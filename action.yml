@@ -78,15 +78,11 @@ runs:
 
         git add "$OUTPUT_PATH"
 
-        # Check if we should amend the previous commit
         SHOULD_AMEND="false"
         if [ "$NO_AMEND" != "true" ]; then
-          # Get last commit message (first line only)
           LAST_MSG=$(git log -1 --pretty=%s 2>/dev/null || echo "")
-          # Get files changed in last commit (relative paths, no empty lines)
           LAST_FILES=$(git diff-tree --no-commit-id --name-only -r HEAD 2>/dev/null | grep -v '^$' || echo "")
 
-          # Check if message matches and only output file was changed
           if [ "$LAST_MSG" = "$COMMIT_MSG" ] && [ "$LAST_FILES" = "$OUTPUT_PATH" ]; then
             SHOULD_AMEND="true"
           fi
