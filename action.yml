@@ -1,5 +1,5 @@
 name: 'GitHub Space Shooter'
-description: 'Transform your GitHub contribution graph into a space shooter game GIF or embeddable HTML'
+description: 'Transform your GitHub contribution graph into a space shooter game GIF'
 author: 'zane'
 
 branding:
@@ -26,9 +26,10 @@ inputs:
     description: 'Frames per second for the animation (default: 40)'
     required: false
     default: '40'
-  write-dataurl-to:
-    description: 'Write WebP as HTML <img> data URL to text file (mutually exclusive with output-path)'
+  no-amend:
+    description: 'Disable amending previous commits (always create new commits)'
     required: false
+    default: 'false'
   commit-message:
     description: 'Commit message for the GIF update'
     required: false
@@ -36,7 +37,7 @@ inputs:
 
 outputs:
   output-file:
-    description: 'Path to the generated output file (GIF, WebP, or HTML data URL file)'
+    description: 'Path to the generated output file (GIF or WebP)'
     value: ${{ steps.generate.outputs.output-file }}
 
 runs:
@@ -59,29 +60,40 @@ runs:
       env:
         GH_TOKEN: ${{ inputs.github-token }}
       run: |
-        if [ -n "${{ inputs.write-dataurl-to }}" ]; then
-          gh-space-shooter ${{ inputs.username }} \
-            --write-dataurl-to ${{ inputs.write-dataurl-to }} \
-            --strategy ${{ inputs.strategy }} \
-            --fps ${{ inputs.fps }}
-          echo "output-file=${{ inputs.write-dataurl-to }}" >> $GITHUB_OUTPUT
-        else
-          gh-space-shooter ${{ inputs.username }} \
-            --output ${{ inputs.output-path }} \
-            --strategy ${{ inputs.strategy }} \
-            --fps ${{ inputs.fps }}
-          echo "output-file=${{ inputs.output-path }}" >> $GITHUB_OUTPUT
-        fi
+        gh-space-shooter ${{ inputs.username }} \
+          --output ${{ inputs.output-path }} \
+          --strategy ${{ inputs.strategy }} \
+          --fps ${{ inputs.fps }}
+        echo "output-file=${{ inputs.output-path }}" >> $GITHUB_OUTPUT
 
     - name: Commit and push
       shell: bash
       run: |
         git config --local user.email "github-actions[bot]@users.noreply.github.com"
         git config --local user.name "github-actions[bot]"
-        if [ -n "${{ inputs.write-dataurl-to }}" ]; then
-          git add ${{ inputs.write-dataurl-to }}
-        else
-          git add ${{ inputs.output-path }}
+
+        OUTPUT_PATH="${{ inputs.output-path }}"
+        COMMIT_MSG="${{ inputs.commit-message }}"
+        NO_AMEND="${{ inputs.no-amend }}"
+
+        git add "$OUTPUT_PATH"
+
+        SHOULD_AMEND="false"
+        if [ "$NO_AMEND" != "true" ]; then
+          LAST_MSG=$(git log -1 --pretty=%s 2>/dev/null || echo "")
+          LAST_FILES=$(git diff-tree --no-commit-id --name-only -r HEAD 2>/dev/null | grep -v '^$' || echo "")
+
+          if [ "$LAST_MSG" = "$COMMIT_MSG" ] && [ "$LAST_FILES" = "$OUTPUT_PATH" ]; then
+            SHOULD_AMEND="true"
+          fi
         fi
-        git diff --staged --quiet || git commit -m "${{ inputs.commit-message }}"
-        git push
+
+        if [ "$SHOULD_AMEND" = "true" ]; then
+          echo "Amending previous commit (same message and file)"
+          git commit --amend --no-edit
+          git push --force-with-lease
+        else
+          echo "Creating new commit"
+          git diff --staged --quiet || git commit -m "$COMMIT_MSG"
+          git push
+        fi

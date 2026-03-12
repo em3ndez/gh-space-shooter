@@ -31,11 +31,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: czl9707/gh-space-shooter@v1
+      - uses: czl9707/gh-space-shooter@v2
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           output-path: 'game.gif'
-          # write-dataurl-to: 'README.md'   # for dataurl generation.
           strategy: 'random'
 ```
 
@@ -44,13 +43,15 @@ Then display it in your README:
 ![My GitHub Game](game.gif)
 ```
 
+> **Github Action V2 Change:** : By default, the action amends the previous commit if it only contains the game file with the same commit message. This prevents repository bloat from daily commits. Set `no-amend: true` to disable this behavior.
+
 **Action Inputs:**
 - `github-token` (required): GitHub token for fetching contributions
 - `username` (optional): Username to generate game for (defaults to repo owner)
 - `output-path` (optional): Where to save the animation, supports `.gif` or `.webp` (default: `gh-space-shooter.gif`)
 - `strategy` (optional): Attack pattern - `column`, `row`, or `random` (default: `random`)
 - `fps` (optional): Frames per second for the animation (default: `40`)
-- `write-dataurl-to` (optional): Write WebP as HTML `<img>` data URL to text file
+- `no-amend` (optional): Set to `true` to disable amending previous commits (default: `false`)
 - `commit-message` (optional): Commit message for the update
 
 ### From PyPI
@@ -130,36 +131,6 @@ This creates an animated GIF showing:
 - Smooth animations with randomized particle effects
 - Your contribution stats displayed in the console
 
-### Generate Data URL (for embedding in HTML/Markdown)
-
-For direct embedding in READMEs or HTML files, use `--write-dataurl-to` to generate a WebP data URL wrapped in an HTML `<img>` tag:
-
-> Note: This not necessarily will work. The .webp can grow over 1 MB very easily, which github will just refuse to render.
-
-```bash
-# Generate data URL and write to README.md
-gh-space-shooter torvalds --write-dataurl-to README.md
-
-# Short form
-gh-space-shooter torvalds -wdt README.md
-```
-
-**Using section markers:** To use this feature, add section markers to your file where you want the game to appear:
-
-```markdown
-# My Profile
-
-<!--START_SECTION:space-shooter-->
-<!--END_SECTION:space-shooter-->
-
-## About Me
-```
-
-This will:
-- **Create new files** with content wrapped in section markers, if file not present.
-- **Replace content** between existing markers (preserving surrounding content)
-- **Raise error** if markers are missing or in wrong order (no silent fallback)
-
 ### Advanced Options
 
 ```bash
@@ -171,9 +142,6 @@ gh-space-shooter --raw-input data.json --output game.webp
 
 # Combine options
 gh-space-shooter torvalds -o game.webp -ro data.json -s column
-
-# Generate data URL with custom strategy
-gh-space-shooter torvalds -wdt README.md -s column
 ```
 
 ### Data Format
