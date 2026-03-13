@@ -29,7 +29,9 @@ jobs:
   update-game:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 2  # This is crucial!
 
       - uses: czl9707/gh-space-shooter@v2
         with:
@@ -44,6 +46,7 @@ Then display it in your README:
 ```
 
 > **Github Action V2 Change:** : By default, the action amends the previous commit if it only contains the game file with the same commit message. This prevents repository bloat from daily commits. Set `no-amend: true` to disable this behavior.
+> Need `fetch-depth: 2` in `actions/checkout@v6` to have this working.
 
 **Action Inputs:**
 - `github-token` (required): GitHub token for fetching contributions
