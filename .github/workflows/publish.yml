@@ -20,6 +20,10 @@ jobs:
   build:
     name: Publish
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      pull-requests: read
+      contents: write
 
     steps:
     - uses: actions/checkout@v6
@@ -42,8 +46,8 @@ jobs:
     - name: Build
       run: uv build
 
-    - name: Publish
-      run: uv publish --token ${{ secrets.PYPI_API_TOKEN }}
+    - name: Publish to PyPI
+      uses: pypa/gh-action-pypi-publish@release/v1
 
     - name: GitHub Release PIP v${{ steps.bump.outputs.current-version }}
       uses: ncipollo/release-action@v1
